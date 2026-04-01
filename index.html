@@ -1,90 +1,244 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>web 페이지 만들기 - 리눅스 서버 구축</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800">
+import React, { useState, useEffect } from 'react';
+import { Calendar, User, CheckCircle2, Circle, Plus, Trash2, ChevronLeft, ChevronRight, Home } from 'lucide-react';
 
-    <!-- Header -->
-    <header class="bg-slate-800 text-white py-12 px-4 shadow-lg">
-        <div class="max-w-4xl mx-auto">
-            <h1 class="text-3xl md:text-4xl font-bold mb-4">Web 페이지 만들기</h1>
-            <p class="text-slate-300 text-lg">목적: 개인 공부용 - VMware 리눅스 서버 설치 및 운영</p>
+const App = () => {
+  // State for chores and current week
+  const [chores, setChores] = useState([]);
+  const [currentWeek, setCurrentWeek] = useState(getWeekNumber(new Date()));
+  const [newChore, setNewChore] = useState({
+    title: '',
+    assignee: '',
+    day: '월요일'
+  });
+
+  // Local storage effect
+  useEffect(() => {
+    const savedChores = localStorage.getItem('housework_data');
+    if (savedChores) {
+      setChores(JSON.parse(savedChores));
+    } else {
+      // Default initial data
+      setChores([
+        { id: 1, title: '거실 청소기 돌리기', assignee: '아빠', day: '월요일', week: currentWeek, completed: false },
+        { id: 2, title: '분리수거 하기', assignee: '엄마', day: '수요일', week: currentWeek, completed: true },
+        { id: 3, title: '화장실 청소', assignee: '나', day: '토요일', week: currentWeek, completed: false }
+      ]);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('housework_data', JSON.stringify(chores));
+  }, [chores]);
+
+  // Helper functions
+  function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
+
+  const addChore = (e) => {
+    e.preventDefault();
+    if (!newChore.title || !newChore.assignee) return;
+    
+    const choreToAdd = {
+      ...newChore,
+      id: Date.now(),
+      week: currentWeek,
+      completed: false
+    };
+    
+    setChores([...chores, choreToAdd]);
+    setNewChore({ title: '', assignee: '', day: '월요일' });
+  };
+
+  const toggleChore = (id) => {
+    setChores(chores.map(c => c.id === id ? { ...c, completed: !c.completed } : c));
+  };
+
+  const deleteChore = (id) => {
+    setChores(chores.filter(c => c.id !== id));
+  };
+
+  const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+  const filteredChores = chores.filter(c => c.week === currentWeek);
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-500 rounded-xl text-white">
+              <Home size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">우리 집 집안일 플래너</h1>
+              <p className="text-slate-500 text-sm">공평하고 즐거운 집안일 분담</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 bg-slate-100 p-2 rounded-lg">
+            <button 
+              onClick={() => setCurrentWeek(prev => prev - 1)}
+              className="p-1 hover:bg-white rounded transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <span className="font-semibold text-slate-700 min-w-[80px] text-center">
+              {currentWeek}주차
+            </span>
+            <button 
+              onClick={() => setCurrentWeek(prev => prev + 1)}
+              className="p-1 hover:bg-white rounded transition-colors"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </header>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Add Form Section */}
+          <section className="md:col-span-1">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-8">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Plus size={20} className="text-blue-500" />
+                새 집안일 추가
+              </h2>
+              <form onSubmit={addChore} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">할 일</label>
+                  <input
+                    type="text"
+                    placeholder="예: 설거지, 빨래"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    value={newChore.title}
+                    onChange={(e) => setNewChore({...newChore, title: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">담당자</label>
+                  <input
+                    type="text"
+                    placeholder="담당자 이름"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    value={newChore.assignee}
+                    onChange={(e) => setNewChore({...newChore, assignee: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">요일</label>
+                  <select
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white"
+                    value={newChore.day}
+                    onChange={(e) => setNewChore({...newChore, day: e.target.value})}
+                  >
+                    {days.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  목록에 추가하기
+                </button>
+              </form>
+            </div>
+          </section>
+
+          {/* List Section */}
+          <section className="md:col-span-2 space-y-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 min-h-[400px]">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <Calendar size={22} className="text-blue-500" />
+                  이번 주 할 일 목록
+                </h2>
+                <div className="text-sm text-slate-500">
+                  완료: {filteredChores.filter(c => c.completed).length} / {filteredChores.length}
+                </div>
+              </div>
+
+              {filteredChores.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                  <div className="mb-4 bg-slate-50 p-4 rounded-full">
+                    <CheckCircle2 size={48} className="opacity-20" />
+                  </div>
+                  <p>이번 주차에 등록된 집안일이 없습니다.</p>
+                  <p className="text-sm">왼쪽 폼에서 새로운 일을 추가해보세요!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {days.map(day => {
+                    const dayChores = filteredChores.filter(c => c.day === day);
+                    if (dayChores.length === 0) return null;
+                    return (
+                      <div key={day} className="mb-4">
+                        <h3 className="text-sm font-bold text-slate-400 mb-2 px-1">{day}</h3>
+                        <div className="space-y-2">
+                          {dayChores.map(chore => (
+                            <div 
+                              key={chore.id}
+                              className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                                chore.completed ? 'bg-slate-50 border-slate-100 opacity-75' : 'bg-white border-slate-200 hover:border-blue-200'
+                              }`}
+                            >
+                              <div className="flex items-center gap-4">
+                                <button 
+                                  onClick={() => toggleChore(chore.id)}
+                                  className={`transition-colors ${chore.completed ? 'text-green-500' : 'text-slate-300 hover:text-blue-500'}`}
+                                >
+                                  {chore.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                                </button>
+                                <div>
+                                  <p className={`font-semibold ${chore.completed ? 'line-through text-slate-400' : 'text-slate-700'}`}>
+                                    {chore.title}
+                                  </p>
+                                  <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
+                                    <User size={12} />
+                                    <span>담당자: {chore.assignee}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => deleteChore(chore.id)}
+                                className="text-slate-300 hover:text-red-500 p-2 transition-colors"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            
+            {/* Progress Bar */}
+            {filteredChores.length > 0 && (
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div className="flex justify-between text-sm font-medium mb-2">
+                  <span className="text-slate-600">주간 달성도</span>
+                  <span className="text-blue-600">
+                    {Math.round((filteredChores.filter(c => c.completed).length / filteredChores.length) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-blue-500 h-full transition-all duration-500 ease-out"
+                    style={{ width: `${(filteredChores.filter(c => c.completed).length / filteredChores.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+          </section>
         </div>
-    </header>
+      </div>
+    </div>
+  );
+};
 
-    <!-- Main Content -->
-    <main class="max-w-4xl mx-auto py-10 px-4">
-        
-        <!-- Introduction Section -->
-        <section class="mb-12">
-            <h2 class="text-2xl font-bold border-l-4 border-blue-500 pl-4 mb-6">1. 서버 구축 개요</h2>
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <p class="mb-4">VMware 가상 머신 환경에 리눅스(Ubuntu/CentOS 등)를 설치하여 외부에서도 접근 가능한 서버 환경을 구축하는 과정을 공부합니다.</p>
-                <div class="grid md:grid-cols-3 gap-4 text-center">
-                    <div class="p-4 bg-blue-50 rounded">
-                        <span class="block font-bold text-blue-700">가상화</span>
-                        <span class="text-sm text-gray-600">VMware Workstation</span>
-                    </div>
-                    <div class="p-4 bg-green-50 rounded">
-                        <span class="block font-bold text-green-700">OS</span>
-                        <span class="text-sm text-gray-600">Linux Distribution</span>
-                    </div>
-                    <div class="p-4 bg-purple-50 rounded">
-                        <span class="block font-bold text-purple-700">서비스</span>
-                        <span class="text-sm text-gray-600">Web/DB Server</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Implementation Steps -->
-        <section class="mb-12">
-            <h2 class="text-2xl font-bold border-l-4 border-blue-500 pl-4 mb-6">2. 주요 단계별 가이드</h2>
-            <div class="space-y-4">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
-                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">1</div>
-                    <div>
-                        <h3 class="font-bold text-lg mb-1">가상 머신 생성</h3>
-                        <p class="text-gray-600">VMware에서 New Virtual Machine을 생성하고 리눅스 ISO 파일을 마운트합니다.</p>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
-                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">2</div>
-                    <div>
-                        <h3 class="font-bold text-lg mb-1">서버 패키지 설치</h3>
-                        <p class="text-gray-600">Apache, Nginx 등 웹 서버 소프트웨어와 필요한 라이브러리를 설치합니다.</p>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
-                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">3</div>
-                    <div>
-                        <h3 class="font-bold text-lg mb-1">외부 접근 설정 (Port Forwarding)</h3>
-                        <p class="text-gray-600">공유기 설정 및 VMware NAT 설정을 통해 외부 유저가 공인 IP로 접근할 수 있게 포트를 개방합니다.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Testing Section -->
-        <section class="bg-blue-900 text-white p-8 rounded-2xl shadow-xl">
-            <h2 class="text-2xl font-bold mb-4 italic text-center">"테스트용 페이지 운영 중"</h2>
-            <p class="text-blue-200 text-center">본 페이지는 VMware 기반 서버 구축을 위한 학습용 인터페이스입니다.</p>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="text-center py-10 text-gray-500 text-sm">
-        <p>&copy; 2024 개인 공부용 리눅스 서버 프로젝트. All rights reserved.</p>
-    </footer>
-
-</body>
-</html>
+export default App;
