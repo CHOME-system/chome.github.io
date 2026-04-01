@@ -13,6 +13,8 @@
         body { font-family: 'Noto Sans KR', sans-serif; }
         .chore-card { transition: all 0.2s ease; }
         .chore-card:hover { transform: translateY(-2px); }
+        /* 터치 타겟 확보 */
+        button { cursor: pointer; min-width: 40px; min-height: 40px; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
@@ -28,11 +30,11 @@
             </div>
             
             <div class="flex items-center bg-white shadow-sm border rounded-lg p-1">
-                <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-100 rounded-md transition-colors">
+                <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-100 rounded-md transition-colors" aria-label="이전 주">
                     <i data-lucide="chevron-left"></i>
                 </button>
                 <span id="current-week-display" class="px-4 font-bold text-lg text-blue-600">--주차</span>
-                <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-100 rounded-md transition-colors">
+                <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-100 rounded-md transition-colors" aria-label="다음 주">
                     <i data-lucide="chevron-right"></i>
                 </button>
             </div>
@@ -89,23 +91,16 @@
                 </div>
 
                 <div id="chore-list" class="space-y-6">
-                    <!-- 요일별로 자바스크립트가 생성할 공간 -->
+                    <!-- JavaScript will generate content here -->
                 </div>
             </section>
         </div>
     </div>
 
     <script>
-        // State Management
-        let chores = JSON.parse(localStorage.getItem('housework_data')) || [
-            { id: 1, title: '거실 청소기 돌리기', assignee: '아빠', day: '월요일', week: getWeekNumber(new Date()), completed: false },
-            { id: 2, title: '분리수거 하기', assignee: '엄마', day: '수요일', week: getWeekNumber(new Date()), completed: true },
-            { id: 3, title: '화장실 청소', assignee: '나', day: '토요일', week: getWeekNumber(new Date()), completed: false }
-        ];
-        let currentWeek = getWeekNumber(new Date());
-
-        const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
-
+        // --- State Management ---
+        const LOCAL_STORAGE_KEY = 'housework_data';
+        
         // Helper: Get Week Number
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -114,51 +109,65 @@
             return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         }
 
-        // Functions
+        let chores = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [
+            { id: 1, title: '거실 청소기 돌리기', assignee: '아빠', day: '월요일', week: getWeekNumber(new Date()), completed: false },
+            { id: 2, title: '분리수거 하기', assignee: '엄마', day: '수요일', week: getWeekNumber(new Date()), completed: true },
+            { id: 3, title: '화장실 청소', assignee: '나', day: '토요일', week: getWeekNumber(new Date()), completed: false }
+        ];
+        
+        let currentWeek = getWeekNumber(new Date());
+        const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+
+        // --- Core Functions ---
+        
         function saveAndRender() {
-            localStorage.setItem('housework_data', JSON.stringify(chores));
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(chores));
             render();
         }
 
-        function changeWeek(diff) {
+        window.changeWeek = function(diff) {
             currentWeek += diff;
             render();
-        }
+        };
 
-        function toggleChore(id) {
+        window.toggleChore = function(id) {
             chores = chores.map(c => c.id === id ? { ...c, completed: !c.completed } : c);
             saveAndRender();
-        }
+        };
 
-        function deleteChore(id) {
-            if(confirm('이 일을 삭제할까요?')) {
+        // 삭제 기능 수정: id가 정확히 매칭되도록 보장
+        window.deleteChore = function(id) {
+            // Confirm 창 커스텀 대신 브라우저 기본 사용
+            if (confirm('정말로 이 항목을 삭제하시겠습니까?')) {
                 chores = chores.filter(c => c.id !== id);
                 saveAndRender();
             }
-        }
+        };
 
         function addChore(e) {
             e.preventDefault();
-            const title = document.getElementById('title-input').value;
-            const assignee = document.getElementById('assignee-input').value;
-            const day = document.getElementById('day-input').value;
+            const titleInput = document.getElementById('title-input');
+            const assigneeInput = document.getElementById('assignee-input');
+            const dayInput = document.getElementById('day-input');
 
             const newChore = {
-                id: Date.now(),
-                title,
-                assignee,
-                day,
+                id: Date.now(), // 고유 ID 생성
+                title: titleInput.value,
+                assignee: assigneeInput.value,
+                day: dayInput.value,
                 week: currentWeek,
                 completed: false
             };
 
             chores.push(newChore);
-            document.getElementById('chore-form').reset();
+            titleInput.value = '';
+            assigneeInput.value = '';
             saveAndRender();
         }
 
         function render() {
             document.getElementById('current-week-display').innerText = `${currentWeek}주차`;
+            
             const filtered = chores.filter(c => c.week === currentWeek);
             const completedCount = filtered.filter(c => c.completed).length;
             
@@ -170,54 +179,58 @@
             if (filtered.length === 0) {
                 listContainer.innerHTML = `
                     <div class="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-slate-200">
-                        <i data-lucide="calendar-x2" class="mx-auto w-12 h-12 text-slate-300 mb-3"></i>
+                        <div class="flex justify-center mb-3 text-slate-300">
+                            <i data-lucide="calendar-x2" class="w-12 h-12"></i>
+                        </div>
                         <p class="text-slate-500 font-medium">이번 주차에 등록된 집안일이 없습니다.</p>
                         <p class="text-slate-400 text-sm">왼쪽 폼에서 새로운 일을 추가해보세요!</p>
                     </div>
                 `;
-                lucide.createIcons();
-                return;
+            } else {
+                days.forEach(day => {
+                    const dayChores = filtered.filter(c => c.day === day);
+                    if (dayChores.length === 0) return;
+
+                    const daySection = document.createElement('div');
+                    daySection.className = "mb-6";
+                    daySection.innerHTML = `
+                        <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                            ${day}
+                        </h3>
+                        <div class="space-y-3">
+                            ${dayChores.map(chore => `
+                                <div class="chore-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                                        <button onclick="toggleChore(${chore.id})" class="flex-shrink-0 transition-colors ${chore.completed ? 'text-green-500' : 'text-slate-300 hover:text-blue-400'}" aria-label="완료 상태 변경">
+                                            <i data-lucide="${chore.completed ? 'check-circle-2' : 'circle'}" class="w-6 h-6"></i>
+                                        </button>
+                                        <div class="truncate">
+                                            <p class="font-semibold ${chore.completed ? 'line-through text-slate-400' : 'text-slate-800'}">${chore.title}</p>
+                                            <p class="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                                                <i data-lucide="user" class="w-3 h-3"></i> 담당: ${chore.assignee}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button onclick="deleteChore(${chore.id})" class="p-2 text-slate-300 hover:text-red-500 transition-colors" aria-label="삭제">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    listContainer.appendChild(daySection);
+                });
             }
 
-            days.forEach(day => {
-                const dayChores = filtered.filter(c => c.day === day);
-                if (dayChores.length === 0) return;
-
-                const daySection = document.createElement('div');
-                daySection.innerHTML = `
-                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                        ${day}
-                    </h3>
-                    <div class="space-y-3">
-                        ${dayChores.map(chore => `
-                            <div class="chore-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
-                                <div class="flex items-center gap-3 flex-1 min-w-0">
-                                    <button onclick="toggleChore(${chore.id})" class="flex-shrink-0 transition-colors ${chore.completed ? 'text-green-500' : 'text-slate-300 hover:text-blue-400'}">
-                                        <i data-lucide="${chore.completed ? 'check-circle-2' : 'circle'}" class="w-6 h-6"></i>
-                                    </button>
-                                    <div class="truncate">
-                                        <p class="font-semibold ${chore.completed ? 'line-through text-slate-400' : 'text-slate-800'}">${chore.title}</p>
-                                        <p class="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                                            <i data-lucide="user" class="w-3 h-3"></i> 담당: ${chore.assignee}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button onclick="deleteChore(${chore.id})" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                listContainer.appendChild(daySection);
-            });
-
+            // 아이콘 재생성
             lucide.createIcons();
         }
 
-        // Initialize
-        document.getElementById('chore-form').onsubmit = addChore;
+        // --- Initialize ---
+        document.getElementById('chore-form').addEventListener('submit', addChore);
+        
+        // 페이지 로드 시 렌더링
         window.onload = render;
     </script>
 </body>
