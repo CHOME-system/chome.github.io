@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>web 페이지 만들기 - 리눅스 서버 구축</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-slate-800 text-white py-12 px-4 shadow-lg">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4">Web 페이지 만들기</h1>
+            <p class="text-slate-300 text-lg">목적: 개인 공부용 - VMware 리눅스 서버 설치 및 운영</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto py-10 px-4">
+        
+        <!-- Introduction Section -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold border-l-4 border-blue-500 pl-4 mb-6">1. 서버 구축 개요</h2>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <p class="mb-4">VMware 가상 머신 환경에 리눅스(Ubuntu/CentOS 등)를 설치하여 외부에서도 접근 가능한 서버 환경을 구축하는 과정을 공부합니다.</p>
+                <div class="grid md:grid-cols-3 gap-4 text-center">
+                    <div class="p-4 bg-blue-50 rounded">
+                        <span class="block font-bold text-blue-700">가상화</span>
+                        <span class="text-sm text-gray-600">VMware Workstation</span>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded">
+                        <span class="block font-bold text-green-700">OS</span>
+                        <span class="text-sm text-gray-600">Linux Distribution</span>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded">
+                        <span class="block font-bold text-purple-700">서비스</span>
+                        <span class="text-sm text-gray-600">Web/DB Server</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Implementation Steps -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold border-l-4 border-blue-500 pl-4 mb-6">2. 주요 단계별 가이드</h2>
+            <div class="space-y-4">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
+                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">1</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">가상 머신 생성</h3>
+                        <p class="text-gray-600">VMware에서 New Virtual Machine을 생성하고 리눅스 ISO 파일을 마운트합니다.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
+                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">2</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">서버 패키지 설치</h3>
+                        <p class="text-gray-600">Apache, Nginx 등 웹 서버 소프트웨어와 필요한 라이브러리를 설치합니다.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
+                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">3</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">외부 접근 설정 (Port Forwarding)</h3>
+                        <p class="text-gray-600">공유기 설정 및 VMware NAT 설정을 통해 외부 유저가 공인 IP로 접근할 수 있게 포트를 개방합니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testing Section -->
+        <section class="bg-blue-900 text-white p-8 rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 italic text-center">"테스트용 페이지 운영 중"</h2>
+            <p class="text-blue-200 text-center">본 페이지는 VMware 기반 서버 구축을 위한 학습용 인터페이스입니다.</p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-10 text-gray-500 text-sm">
+        <p>&copy; 2024 개인 공부용 리눅스 서버 프로젝트. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
